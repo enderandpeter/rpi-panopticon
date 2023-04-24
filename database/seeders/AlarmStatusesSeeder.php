@@ -22,6 +22,10 @@ class AlarmStatusesSeeder extends Seeder
         ]);
 
         AlarmStatus::firstOrCreate([
+            'name' => 'arming'
+        ]);
+
+        AlarmStatus::firstOrCreate([
             'name' => 'armed'
         ]);
         AlarmStatus::firstOrCreate([

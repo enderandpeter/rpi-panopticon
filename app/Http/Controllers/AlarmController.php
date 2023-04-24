@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\AlarmStatusChanged;
+use App\Http\Resources\AlarmResource;
 use App\Models\Alarm;
 use App\Models\AlarmStatus;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class AlarmController extends Controller
      */
     public function show(Alarm $alarm)
     {
-        //
+        return new AlarmResource($alarm);
     }
 
     /**
@@ -40,19 +41,31 @@ class AlarmController extends Controller
     {
         $responseStatus = [];
         if($request->has('status')){
-            if($alarm->pending_status){
-                return [
-                    'alarm' => $alarm->id,
-                    'status' => 'pending'
-                ];
-            }
-
-            $alarm->pending_status = true;
-            $alarm->save();
-
             $newAlarmStatusRequest = $request->get('status');
 
-            $newAlarmStatus = AlarmStatus::findOrFail($newAlarmStatusRequest);
+            if(is_numeric($newAlarmStatusRequest)){
+                $newAlarmStatus = AlarmStatus::findOrFail($newAlarmStatusRequest);
+            } else {
+                $newAlarmStatus = AlarmStatus::where('name', $newAlarmStatusRequest)->firstOrFail();
+            }
+
+            if($newAlarmStatus->name === 'arming'){
+                if($alarm->status->name !== 'initialized'){
+                    return response([
+                        'status' => $alarm->status->name,
+                        'message' => "Alarm must be initialized before setting to $newAlarmStatus->name"
+                    ], 409);
+                }
+            }
+
+            if($newAlarmStatus->name === 'armed'){
+                if(!($alarm->status->name === 'arming' || $alarm->status->name === 'recording')){
+                    return response([
+                        'status' => $alarm->status->name,
+                        'message' => "Alarm must be armed or recording before setting to $newAlarmStatus->name"
+                    ], 409);
+                }
+            }
 
             $alarm->status()->associate($newAlarmStatus);
             $alarm->save();

@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if(!Schema::hasColumn('alarms', 'pending_status')){
-            Schema::table('alarms', function(Blueprint $table){
-                $table->boolean('pending_status')->default(false);
+        if(!Schema::hasColumn('alarms', 'arming_duration')){
+            Schema::table('alarms', function (Blueprint $table) {
+                $table->integer('arming_duration')->default(5);
             });
         }
+
     }
 
     /**
@@ -23,8 +24,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if(Schema::hasColumn('alarms', 'pending_status')){
-            Schema::dropColumns('alarms', 'pending_status');
+        if(Schema::hasColumn('alarms', 'arming_duration')){
+            Schema::dropColumns('alarms', 'arming_duration');
         }
     }
 };
